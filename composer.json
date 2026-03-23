@@ -1,0 +1,31 @@
+{
+    "name": "logingrupa/oc-campaignpricing-plugin",
+    "type": "october-plugin",
+    "description": "Display campaign-driven quantity pricing tiers on product pages for Lovata Shopaholic.",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Logingrupa",
+            "email": "info@logingrupa.lv"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "october/system": "^4.0",
+        "october/rain": "^4.0",
+        "lovata/toolbox-plugin": "^2.2",
+        "lovata/shopaholic-plugin": "^1.32",
+        "lovata/campaignsshopaholic-plugin": "^1.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Logingrupa\\CampaignpricingShopaholic\\": ""
+        }
+    },
+    "extra": {
+        "october": {
+            "plugin": "Logingrupa.CampaignpricingShopaholic",
+            "installer-name": "campaignpricingshopaholic"
+        }
+    }
+}

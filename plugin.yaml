@@ -1,0 +1,6 @@
+plugin:
+    name: 'logingrupa.campaignpricingshopaholic::lang.plugin.name'
+    description: 'logingrupa.campaignpricingshopaholic::lang.plugin.description'
+    author: Logingrupa
+    icon: icon-tags
+    homepage: 'https://logingrupa.lv'
