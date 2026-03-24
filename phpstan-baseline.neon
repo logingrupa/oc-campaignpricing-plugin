@@ -1,0 +1,73 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Method Logingrupa\\CampaignpricingShopaholic\\Classes\\Collection\\CampaignPricingCollection\:\:getIterator\(\) should return ArrayIterator\<int, Lovata\\Toolbox\\Classes\\Item\\ElementItem\> but returns ArrayIterator\<int, Logingrupa\\CampaignpricingShopaholic\\Classes\\Item\\CampaignPricingItem\>\.$#'
+			identifier: return.type
+			count: 1
+			path: classes/collection/CampaignPricingCollection.php
+
+		-
+			message: '#^Instanceof between Lovata\\Shopaholic\\Classes\\Item\\OfferItem and Lovata\\Shopaholic\\Classes\\Item\\OfferItem will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: classes/event/OfferItemExtendHandler.php
+
+		-
+			message: '#^Result of \|\| is always false\.$#'
+			identifier: booleanOr.alwaysFalse
+			count: 1
+			path: classes/event/OfferItemExtendHandler.php
+
+		-
+			message: '#^Variable \$obOfferItem in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: classes/event/OfferItemExtendHandler.php
+
+		-
+			message: '#^Parameter \#2 \$value of method October\\Rain\\Database\\Model\:\:addDynamicProperty\(\) expects string\|null, array\<int, string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: classes/event/PromoMechanismModelExtendHandler.php
+
+		-
+			message: '#^Access to an undefined property Lovata\\OrdersShopaholic\\Models\\PromoMechanism\:\:\$display_template\.$#'
+			identifier: property.notFound
+			count: 1
+			path: classes/item/CampaignPricingItem.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: classes/item/CampaignPricingItem.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: classes/store/OfferCampaignPricingStore.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$mechanism\.$#'
+			identifier: property.notFound
+			count: 1
+			path: classes/store/OfferCampaignPricingStore.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: classes/store/OfferCampaignPricingStore.php
+
+		-
+			message: '#^Parameter \#1 \$array of function usort contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: classes/store/OfferCampaignPricingStore.php
+
+		-
+			message: '#^Parameter \#2 \$callback of function usort contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: classes/store/OfferCampaignPricingStore.php
