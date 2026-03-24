@@ -1,0 +1,29 @@
+{##}
+{# Campaign Pricing Tiers — default component partial #}
+{#                                                      #}
+{# Usage: Drop {% component 'CampaignPricing' %} on a product page #}
+{# where obProduct is available (e.g. inside SingleProductPage).    #}
+{#                                                                  #}
+{# Tiers update when the offer changes via the onSwitchOffer AJAX  #}
+{# handler. Call it with product_id and offer_id post data.         #}
+{#                                                                  #}
+{# @var obProduct \Lovata\Shopaholic\Classes\Item\ProductItem       #}
+{# @var obOffer   \Lovata\Shopaholic\Classes\Item\OfferItem (set by AJAX handler or page) #}
+
+{% set obOffer = obOffer is not empty ? obOffer : obProduct.offer.first() %}
+
+{% if obOffer is not empty %}
+    {% set obCampaignPricingList = obOffer.campaign_pricing_list %}
+
+    {% if obCampaignPricingList is not empty and obCampaignPricingList.count() > 0 %}
+    <div class="campaign-pricing-tiers">
+        <ul class="campaign-pricing-tiers__list">
+            {% for obTier in obCampaignPricingList %}
+            <li class="campaign-pricing-tiers__item">
+                {{ obTier.display_text|raw }}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+{% endif %}

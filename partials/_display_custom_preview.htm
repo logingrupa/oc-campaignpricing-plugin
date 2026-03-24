@@ -1,0 +1,160 @@
+<?php
+use Logingrupa\CampaignpricingShopaholic\Classes\Tier\TierResolverRegistry;
+use Lovata\CampaignsShopaholic\Models\Campaign;
+
+$obModel = $formModel ?? null;
+$sCustomText = '';
+$arExampleVars = [];
+
+// Detect current locale and whether this is a translation or default
+$sCurrentLocale = \RainLab\Translate\Classes\Translator::instance()->getLocale();
+$sDefaultLocale = \RainLab\Translate\Classes\Translator::instance()->getDefaultLocale();
+$bIsDefault = ($sCurrentLocale === $sDefaultLocale);
+$sLocaleName = strtoupper($sCurrentLocale);
+
+// Check if a translation exists for this locale
+$bHasTranslation = false;
+if ($obModel && $obModel->id && !$bIsDefault) {
+    $bHasTranslation = \DB::table('rainlab_translate_attributes')
+        ->where('model_type', get_class($obModel))
+        ->where('model_id', $obModel->id)
+        ->where('locale', $sCurrentLocale)
+        ->exists();
+}
+
+if ($obModel && $obModel->type) {
+    $arResolver = TierResolverRegistry::getResolver($obModel->type);
+    if ($arResolver) {
+        $arProperty = is_array($obModel->property) ? $obModel->property : [];
+        $iQuantity = TierResolverRegistry::extractQuantity($arProperty, $arResolver);
+        $fDiscountValue = (float) $obModel->discount_value;
+        $sDiscountType = (string) $obModel->discount_type;
+
+        $arExampleVars = [
+            'quantity'       => $iQuantity ?: '?',
+            'price'          => '€' . number_format($fDiscountValue, 2),
+            'currency'       => '€',
+            'discount'       => $sDiscountType === 'percent' ? $fDiscountValue . '%' : '€' . number_format($fDiscountValue, 2),
+            'discount_value' => $fDiscountValue,
+            'discount_type'  => $sDiscountType,
+            'campaign_name'  => $obModel->id
+                ? (Campaign::whereHas('mechanism', fn ($q) => $q->where('id', $obModel->id))->value('name') ?: trans('logingrupa.campaignpricingshopaholic::lang.field.preview_campaign'))
+                : trans('logingrupa.campaignpricingshopaholic::lang.field.preview_campaign'),
+            'count'          => $iQuantity ?: '?',
+        ];
+
+        $sCustomTemplate = trim(strip_tags((string) $obModel->display_template));
+        if (!empty($sCustomTemplate)) {
+            $arKeys = array_keys($arExampleVars);
+            usort($arKeys, fn ($a, $b) => strlen($b) - strlen($a));
+            foreach ($arKeys as $sKey) {
+                $sCustomTemplate = str_replace(':' . $sKey, (string) $arExampleVars[$sKey], $sCustomTemplate);
+            }
+            $sCustomText = trim($sCustomTemplate);
+        }
+    }
+}
+?>
+
+<div class="callout fade in callout-<?= (!$bIsDefault && !$bHasTranslation) ? 'warning' : 'success' ?>" id="campaignPricingCustomPreview" style="margin-top: -5px; margin-bottom: 10px;">
+    <div class="content" style="padding: 10px 15px;">
+        <div style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;">
+            <span style="font-size: 12px; color: #888; white-space: nowrap;">
+                <i class="icon-eye"></i>
+                <?= e(trans('logingrupa.campaignpricingshopaholic::lang.field.preview_custom')) ?>
+                <code style="font-size: 11px; padding: 1px 5px; border-radius: 3px; background: <?= $bIsDefault ? '#e8f4fd' : '#fff3cd' ?>;"><?= e($sLocaleName) ?></code>
+                <?php if ($bIsDefault): ?>
+                    <span style="color: #28a745; font-size: 11px;">(<?= e(trans('logingrupa.campaignpricingshopaholic::lang.field.preview_is_default')) ?>)</span>
+                <?php elseif ($bHasTranslation): ?>
+                    <span style="color: #28a745; font-size: 11px;">(<?= e(trans('logingrupa.campaignpricingshopaholic::lang.field.preview_translated')) ?>)</span>
+                <?php else: ?>
+                    <span style="color: #dc3545; font-size: 11px;">(<?= e(trans('logingrupa.campaignpricingshopaholic::lang.field.preview_fallback')) ?>)</span>
+                <?php endif; ?>:
+            </span>
+            <span id="cpLivePreviewText" style="font-size: 15px; font-weight: 600; color: #333;">
+                <?php if ($sCustomText): ?>
+                    <?= e($sCustomText) ?>
+                <?php else: ?>
+                    <span style="font-weight: 400; font-size: 13px; color: #999; font-style: italic;">
+                        <?= e(trans('logingrupa.campaignpricingshopaholic::lang.field.preview_custom_empty')) ?>
+                    </span>
+                <?php endif; ?>
+            </span>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    var arVars = <?= json_encode($arExampleVars) ?>;
+    var sEmptyText = <?= json_encode(trans('logingrupa.campaignpricingshopaholic::lang.field.preview_custom_empty')) ?>;
+
+    // Sort keys longest-first to avoid :discount replacing inside :discount_type
+    var arKeys = Object.keys(arVars).sort(function(a, b) {
+        return b.length - a.length;
+    });
+
+    var sLastContent = '';
+    var iTimerId = null;
+
+    function resolveTemplate(sHtml) {
+        var sPlain = sHtml.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/\u200B/g, '').trim();
+        if (!sPlain) return '';
+        arKeys.forEach(function(sKey) {
+            sPlain = sPlain.split(':' + sKey).join(String(arVars[sKey]));
+        });
+        return sPlain.trim();
+    }
+
+    function updatePreview() {
+        var elPreview = document.getElementById('cpLivePreviewText');
+        if (!elPreview) { stopPolling(); return; }
+
+        // Read from the Froala contenteditable div
+        var elEditor = document.querySelector('#Form-field-PromoMechanism-display_template-group .fr-element');
+        var sContent = '';
+        if (elEditor) {
+            sContent = elEditor.innerHTML || '';
+        } else {
+            // Fallback: read hidden textarea
+            var elTextarea = document.querySelector('[name="PromoMechanism[display_template]"]');
+            if (elTextarea) sContent = elTextarea.value || '';
+        }
+
+        // Skip if content hasn't changed
+        if (sContent === sLastContent) return;
+        sLastContent = sContent;
+
+        var sResolved = resolveTemplate(sContent);
+        if (sResolved) {
+            elPreview.style.fontWeight = '600';
+            elPreview.style.fontSize = '15px';
+            elPreview.style.color = '#333';
+            elPreview.style.fontStyle = 'normal';
+            elPreview.textContent = sResolved;
+        } else {
+            elPreview.style.fontWeight = '400';
+            elPreview.style.fontSize = '13px';
+            elPreview.style.color = '#999';
+            elPreview.style.fontStyle = 'italic';
+            elPreview.textContent = sEmptyText;
+        }
+    }
+
+    function startPolling() {
+        if (iTimerId) return;
+        iTimerId = setInterval(updatePreview, 300);
+    }
+
+    function stopPolling() {
+        if (iTimerId) { clearInterval(iTimerId); iTimerId = null; }
+    }
+
+    // Start polling when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', startPolling);
+    } else {
+        startPolling();
+    }
+})();
+</script>

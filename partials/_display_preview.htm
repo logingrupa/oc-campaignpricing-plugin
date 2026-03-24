@@ -1,0 +1,122 @@
+<?php
+use Logingrupa\CampaignpricingShopaholic\Classes\Tier\TierResolverRegistry;
+use Lovata\CampaignsShopaholic\Models\Campaign;
+use Lang;
+
+$obModel = $formModel ?? null;
+$sPreviewText = '';
+$sDisplayType = '';
+
+if ($obModel && $obModel->type) {
+    $arResolver = TierResolverRegistry::getResolver($obModel->type);
+    if ($arResolver) {
+        $sDisplayType = $arResolver['display_type'] ?? 'offer_quantity';
+        $arProperty = is_array($obModel->property) ? $obModel->property : [];
+        $iQuantity = TierResolverRegistry::extractQuantity($arProperty, $arResolver);
+        $fDiscountValue = (float) $obModel->discount_value;
+        $sDiscountType = (string) $obModel->discount_type;
+        $sPriceType = $arResolver['price_type'] ?? 'discount';
+
+        $arExampleVars = [
+            'quantity'       => $iQuantity ?: '?',
+            'price'          => '€' . number_format($fDiscountValue, 2),
+            'currency'       => '€',
+            'discount'       => $sDiscountType === 'percent' ? $fDiscountValue . '%' : '€' . number_format($fDiscountValue, 2),
+            'discount_value' => $fDiscountValue,
+            'discount_type'  => $sDiscountType,
+            'campaign_name'  => $obModel->id
+                ? (Campaign::whereHas('mechanism', fn ($q) => $q->where('id', $obModel->id))->value('name') ?: trans('logingrupa.campaignpricingshopaholic::lang.field.preview_campaign'))
+                : trans('logingrupa.campaignpricingshopaholic::lang.field.preview_campaign'),
+            'count'          => $iQuantity ?: '?',
+        ];
+
+        // Resolve preview: use custom template if set, otherwise lang key
+        $sCustomTemplate = trim(strip_tags((string) $obModel->display_template));
+        if (!empty($sCustomTemplate)) {
+            $sPreviewText = $sCustomTemplate;
+        } else {
+            $sLangKey = 'logingrupa.campaignpricingshopaholic::lang.display.' . $sDisplayType;
+            if (!Lang::has($sLangKey)) {
+                $sLangKey = 'logingrupa.campaignpricingshopaholic::lang.display.offer_quantity';
+            }
+            $sPreviewText = Lang::get($sLangKey);
+        }
+
+        // Replace :placeholders (longest-first to avoid partial replacement)
+        $arKeys = array_keys($arExampleVars);
+        usort($arKeys, fn ($a, $b) => strlen($b) - strlen($a));
+        foreach ($arKeys as $sKey) {
+            $sPreviewText = str_replace(':' . $sKey, (string) $arExampleVars[$sKey], $sPreviewText);
+        }
+    }
+}
+?>
+
+<?php if ($sPreviewText): ?>
+<div class="callout fade in callout-info" id="campaignPricingPreview" style="margin-bottom: 0;">
+    <div class="content" style="padding: 10px 15px;">
+        <div style="display: flex; align-items: baseline; gap: 8px;">
+            <i class="icon-eye" style="color: #888;"></i>
+            <span style="font-size: 14px; font-weight: 600; color: #333;">
+                <?= e($sPreviewText) ?>
+            </span>
+        </div>
+        <div style="font-size: 11px; color: #aaa; margin-top: 4px;">
+            <?= e(trans('logingrupa.campaignpricingshopaholic::lang.field.preview_type')) ?>:
+            <code style="font-size: 11px;"><?= e($sDisplayType) ?></code>
+        </div>
+    </div>
+</div>
+<?php else: ?>
+<div class="callout fade in callout-warning" style="margin-bottom: 0;">
+    <div class="content" style="padding: 8px 15px;">
+        <span style="font-size: 13px; color: #999; font-style: italic;">
+            <?= e(trans('logingrupa.campaignpricingshopaholic::lang.field.preview_unavailable')) ?>
+        </span>
+    </div>
+</div>
+<?php endif; ?>
+
+<script>
+(function() {
+    function init() {
+        var elMainSwitch = document.querySelector('[name="PromoMechanism[property][campaign_pricing_enabled]"][type="checkbox"]');
+        if (!elMainSwitch) return;
+
+        // Fields that should hide when main switch is OFF (even if customize switch is ON)
+        var arSelectors = [
+            '#Form-field-PromoMechanism-display_template-group',
+            '#Form-field-PromoMechanism-property-campaign_pricing_custom_template-group',
+            '#campaignPricingTemplateHelp',
+            '#campaignPricingCustomPreview'
+        ];
+
+        function syncVisibility() {
+            var bEnabled = elMainSwitch.checked;
+            arSelectors.forEach(function(sSelector) {
+                var elTarget = document.querySelector(sSelector);
+                if (elTarget) {
+                    var elGroup = elTarget.closest('[data-field-name]') || elTarget.closest('.form-group') || elTarget;
+                    if (!bEnabled) {
+                        elGroup.style.display = 'none';
+                    } else {
+                        // Remove our inline hide — let October's triggers control from here
+                        elGroup.style.display = '';
+                    }
+                }
+            });
+        }
+
+        elMainSwitch.addEventListener('change', function() {
+            // Small delay to let October's trigger system run first
+            setTimeout(syncVisibility, 100);
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
+</script>

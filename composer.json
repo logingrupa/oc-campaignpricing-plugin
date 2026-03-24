@@ -22,6 +22,17 @@
             "Logingrupa\\CampaignpricingShopaholic\\": ""
         }
     },
+    "scripts": {
+        "test": "../../../vendor/bin/pest --configuration phpunit.xml",
+        "analyse": "../../../vendor/bin/phpstan analyse --configuration=phpstan.neon",
+        "baseline": "../../../vendor/bin/phpstan analyse --configuration=phpstan.neon --generate-baseline=phpstan-baseline.neon",
+        "phpmd": "../../../vendor/bin/phpmd classes,components,Plugin.php text phpmd.xml",
+        "pint": "../../../vendor/bin/pint . --config=pint.json",
+        "pint-test": "../../../vendor/bin/pint . --config=pint.json --test",
+        "rector-dry": "../../../vendor/bin/rector process --config=rector.php --dry-run",
+        "rector": "../../../vendor/bin/rector process --config=rector.php",
+        "qa": ["@pint-test", "@analyse", "@phpmd", "@test"]
+    },
     "extra": {
         "october": {
             "plugin": "Logingrupa.CampaignpricingShopaholic",

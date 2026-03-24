@@ -1,0 +1,133 @@
+<div class="callout fade in callout-info" id="campaignPricingTemplateHelp">
+    <div class="header">
+        <i class="icon-pencil"></i>
+        <h3><?= e(trans('logingrupa.campaignpricingshopaholic::lang.field.display_template')) ?></h3>
+    </div>
+    <div class="content">
+        <p style="font-size: 14px; margin-bottom: 12px;">
+            <?= e(trans('logingrupa.campaignpricingshopaholic::lang.field.help_intro')) ?>
+        </p>
+
+        <table class="table table-condensed" style="margin-bottom: 12px;">
+            <thead>
+                <tr>
+                    <th style="width: 160px;">Variable</th>
+                    <th>Description</th>
+                    <th style="width: 140px;">Example</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code class="_cp_var" data-var=":quantity">:quantity</code></td>
+                    <td><?= e(trans('logingrupa.campaignpricingshopaholic::lang.field.var_quantity')) ?></td>
+                    <td><code>10</code></td>
+                </tr>
+                <tr>
+                    <td><code class="_cp_var" data-var=":price">:price</code></td>
+                    <td><?= e(trans('logingrupa.campaignpricingshopaholic::lang.field.var_price')) ?></td>
+                    <td><code>kr100,-</code></td>
+                </tr>
+                <tr>
+                    <td><code class="_cp_var" data-var=":currency">:currency</code></td>
+                    <td><?= e(trans('logingrupa.campaignpricingshopaholic::lang.field.var_currency')) ?></td>
+                    <td><code>kr</code></td>
+                </tr>
+                <tr>
+                    <td><code class="_cp_var" data-var=":discount">:discount</code></td>
+                    <td><?= e(trans('logingrupa.campaignpricingshopaholic::lang.field.var_discount')) ?></td>
+                    <td><code>5%</code> / <code>kr20,-</code></td>
+                </tr>
+                <tr>
+                    <td><code class="_cp_var" data-var=":discount_value">:discount_value</code></td>
+                    <td><?= e(trans('logingrupa.campaignpricingshopaholic::lang.field.var_discount_value')) ?></td>
+                    <td><code>9.10</code></td>
+                </tr>
+                <tr>
+                    <td><code class="_cp_var" data-var=":discount_type">:discount_type</code></td>
+                    <td><?= e(trans('logingrupa.campaignpricingshopaholic::lang.field.var_discount_type')) ?></td>
+                    <td><code>fixed</code> / <code>percent</code></td>
+                </tr>
+                <tr>
+                    <td><code class="_cp_var" data-var=":campaign_name">:campaign_name</code></td>
+                    <td><?= e(trans('logingrupa.campaignpricingshopaholic::lang.field.var_campaign_name')) ?></td>
+                    <td><code>Summer Sale</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p style="font-size: 13px; color: #888; margin: 0;">
+            <?= e(trans('logingrupa.campaignpricingshopaholic::lang.field.help_click_hint')) ?>
+        </p>
+    </div>
+</div>
+
+<style>
+    #campaignPricingTemplateHelp code._cp_var {
+        cursor: pointer;
+        padding: 3px 8px;
+        font-size: 13px;
+        background: #e8f4fd;
+        border: 1px solid #b8daff;
+        border-radius: 3px;
+        transition: all 0.15s;
+        user-select: none;
+    }
+    #campaignPricingTemplateHelp code._cp_var:hover {
+        background: #007bff;
+        color: #fff;
+        border-color: #007bff;
+    }
+    #campaignPricingTemplateHelp code._cp_var.is-copied {
+        background: #28a745;
+        color: #fff;
+        border-color: #28a745;
+    }
+</style>
+
+<script>
+(function() {
+    function copyToClipboard(sText) {
+        // HTTPS: use Clipboard API
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            return navigator.clipboard.writeText(sText);
+        }
+        // HTTP fallback: textarea + execCommand
+        var elTemp = document.createElement('textarea');
+        elTemp.value = sText;
+        elTemp.style.position = 'fixed';
+        elTemp.style.opacity = '0';
+        document.body.appendChild(elTemp);
+        elTemp.select();
+        document.execCommand('copy');
+        document.body.removeChild(elTemp);
+        return Promise.resolve();
+    }
+
+    function init() {
+        var elContainer = document.getElementById('campaignPricingTemplateHelp');
+        if (!elContainer) return;
+
+        elContainer.querySelectorAll('._cp_var').forEach(function(elTag) {
+            elTag.addEventListener('click', function() {
+                var sVariable = elTag.getAttribute('data-var');
+                var sOriginalText = elTag.textContent;
+
+                copyToClipboard(sVariable).then(function() {
+                    elTag.textContent = '✓ Copied!';
+                    elTag.classList.add('is-copied');
+                    setTimeout(function() {
+                        elTag.textContent = sOriginalText;
+                        elTag.classList.remove('is-copied');
+                    }, 800);
+                });
+            });
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
+</script>

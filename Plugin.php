@@ -1,5 +1,13 @@
 <?php namespace Logingrupa\CampaignpricingShopaholic;
 
+use Event;
+use Logingrupa\CampaignpricingShopaholic\Classes\Event\CampaignPricingModelHandler;
+use Logingrupa\CampaignpricingShopaholic\Classes\Event\CampaignPricingRelationHandler;
+use Logingrupa\CampaignpricingShopaholic\Classes\Event\OfferItemExtendHandler;
+use Logingrupa\CampaignpricingShopaholic\Classes\Event\PromoMechanismFieldsHandler;
+use Logingrupa\CampaignpricingShopaholic\Classes\Event\PromoMechanismModelExtendHandler;
+use Logingrupa\CampaignpricingShopaholic\Classes\Event\PromoMechanismPricingHandler;
+use Logingrupa\CampaignpricingShopaholic\Components\CampaignPricing;
 use System\Classes\PluginBase;
 
 /**
@@ -11,7 +19,7 @@ class Plugin extends PluginBase
 {
     /**
      * Required plugins
-     * @var array
+     * @var list<string>
      */
     public $require = [
         'Lovata.Shopaholic',
@@ -20,9 +28,10 @@ class Plugin extends PluginBase
 
     /**
      * Returns information about this plugin
-     * @return array
+     * @return array<string, string>
      */
-    public function pluginDetails()
+    #[\Override]
+    public function pluginDetails(): array
     {
         return [
             'name'        => 'logingrupa.campaignpricingshopaholic::lang.plugin.name',
@@ -34,20 +43,32 @@ class Plugin extends PluginBase
 
     /**
      * Boot method, called right before the request route
-     * @return void
      */
-    public function boot()
+    public function boot(): void
     {
-        // Phase 2 will add OfferItem extension and event subscribers here
+        Event::subscribe(CampaignPricingModelHandler::class);
+        Event::subscribe(PromoMechanismPricingHandler::class);
+        (new CampaignPricingRelationHandler())->subscribe();
+
+        // Phase 3: OfferItem extension with campaign_pricing_list accessor
+        Event::subscribe(OfferItemExtendHandler::class);
+
+        // Backend: add display_template field to promo mechanism form
+        Event::subscribe(PromoMechanismFieldsHandler::class);
+
+        // Model: make display_template translatable via site switcher
+        (new PromoMechanismModelExtendHandler())->subscribe();
     }
 
     /**
      * Register components
-     * @return array
+     * @return array<class-string, string>
      */
-    public function registerComponents()
+    #[\Override]
+    public function registerComponents(): array
     {
-        return [];
-        // Phase 3 will register CampaignPricing component here
+        return [
+            CampaignPricing::class => 'CampaignPricing',
+        ];
     }
 }
