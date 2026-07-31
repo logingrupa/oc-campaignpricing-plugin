@@ -13,3 +13,5 @@
     - 'Fix locale-aware display_template resolution (resolve at render time, not cache time)'
 1.4.0:
     - 'Add default.htm component partial and onSwitchOffer AJAX handler'
+1.4.1:
+    - 'Memoize PromoMechanism lookups across pricing tiers (one find per mechanism per request)'
