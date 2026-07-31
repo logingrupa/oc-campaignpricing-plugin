@@ -29,6 +29,14 @@ class CampaignPricingItem extends ElementItem
     public const MODEL_CLASS = \Model::class;
 
     /**
+     * Request-scoped mechanism cache. Multiple tiers of one campaign share a
+     * mechanism; without this every tier ran its own PromoMechanism::find()
+     * (plus a translate attribute load) at render time.
+     * @var array<int, PromoMechanism|null>
+     */
+    private static array $arMechanismCache = [];
+
+    /**
      * Factory method to create an item from a tier data array (not a model)
      * @param array<string, mixed> $arTierData
      */
@@ -264,7 +272,11 @@ class CampaignPricingItem extends ElementItem
             return '';
         }
 
-        $obMechanism = PromoMechanism::find($iMechanismId);
+        if (!array_key_exists($iMechanismId, self::$arMechanismCache)) {
+            self::$arMechanismCache[$iMechanismId] = PromoMechanism::find($iMechanismId);
+        }
+
+        $obMechanism = self::$arMechanismCache[$iMechanismId];
         if (!$obMechanism instanceof PromoMechanism) {
             return '';
         }
