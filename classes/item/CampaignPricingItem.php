@@ -273,11 +273,14 @@ class CampaignPricingItem extends ElementItem
         }
 
         if (!array_key_exists($iMechanismId, self::$arMechanismCache)) {
-            self::$arMechanismCache[$iMechanismId] = PromoMechanism::find($iMechanismId);
+            // narrowed on the way in, not on the way out: find() is typed as the
+            // base Model, and the cache promises a PromoMechanism or nothing
+            $obFound = PromoMechanism::find($iMechanismId);
+            self::$arMechanismCache[$iMechanismId] = $obFound instanceof PromoMechanism ? $obFound : null;
         }
 
         $obMechanism = self::$arMechanismCache[$iMechanismId];
-        if (!$obMechanism instanceof PromoMechanism) {
+        if ($obMechanism === null) {
             return '';
         }
 

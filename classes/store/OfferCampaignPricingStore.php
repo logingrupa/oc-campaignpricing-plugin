@@ -1,6 +1,9 @@
 <?php namespace Logingrupa\CampaignpricingShopaholic\Classes\Store;
 
+use Carbon\Carbon;
+use DateTimeInterface;
 use Illuminate\Support\Facades\DB;
+use Kharanenka\Helper\CCache;
 use Logingrupa\CampaignpricingShopaholic\Classes\Tier\TierResolverRegistry;
 use Lovata\CampaignsShopaholic\Models\Campaign;
 use Lovata\OrdersShopaholic\Models\PromoMechanism;
@@ -17,6 +20,9 @@ use Lovata\Toolbox\Classes\Store\AbstractStoreWithParam;
 class OfferCampaignPricingStore extends AbstractStoreWithParam
 {
     protected static $instance;
+
+    /** @var string Shape of one cached tier row; see getCacheKey() */
+    private const CACHE_KEY_VERSION = 'v2';
 
     /**
      * Type-safe integer from DB::value() which returns mixed.
@@ -41,6 +47,100 @@ class OfferCampaignPricingStore extends AbstractStoreWithParam
         return array_values($obQuery->pluck($sColumn)
             ->map(fn (mixed $iVal): int => is_numeric($iVal) ? (int) $iVal : 0)
             ->all());
+    }
+
+    /**
+     * 'Y-m-d H:i:s' from a date column, null when the column is empty. Strings
+     * in that format compare lexicographically, which is what
+     * Campaign::scopeCurrentActive() relies on as well.
+     */
+    private static function dbDateString(mixed $mValue): ?string
+    {
+        if ($mValue instanceof DateTimeInterface) {
+            return $mValue->format('Y-m-d H:i:s');
+        }
+
+        return is_string($mValue) && $mValue !== '' ? $mValue : null;
+    }
+
+    /**
+     * Offer id, prefixed with the version of the row shape held under it.
+     *
+     * 1.4.2 added the campaign date window to every row, and an entry written
+     * before that carries no date to test, so a reader would quietly drop every
+     * tier it holds until someone cleared the cache. A new prefix leaves those
+     * entries unread instead. Bump it whenever the row shape changes.
+     *
+     * clear() and the per-request memo both key off this method, so invalidation
+     * follows the prefix on its own.
+     */
+    protected function getCacheKey(): string
+    {
+        return self::CACHE_KEY_VERSION.'_'.self::dbInt($this->sValue);
+    }
+
+    /**
+     * Tier list from cache or database, narrowed to the campaigns running now.
+     *
+     * Two deliberate departures from the parent.
+     *
+     * It accepts a cached empty array as a hit. The parent reads one as a miss,
+     * because getIDListFromCache() casts the raw value with (array) and loses
+     * the null-vs-[] distinction, so saveIDList() writes a [] that can never be
+     * read back. Most offers carry no tiers at all, so without this they re-run
+     * the whole pivot fan-out on every request, forever. Same override that
+     * patches/lovata-campaigns-empty-list-cache.patch applies to the three
+     * Lovata campaign stores; it is written out here because this store is ours.
+     *
+     * And the date window is applied HERE rather than in the query, so that what
+     * CCache::forever holds does not depend on when it was built. A campaign
+     * whose date_end merely passes saves no model and fires no event, so a list
+     * built while it was running would go on describing it until someone
+     * re-saved that campaign by hand.
+     * @return array<int, array<string, mixed>>
+     */
+    protected function getIDList(): array
+    {
+        /** @var mixed $mCachedList */
+        $mCachedList = CCache::get($this->getCacheTagList(), $this->getCacheKey());
+        if (is_array($mCachedList)) {
+            /** @var array<int, array<string, mixed>> $mCachedList */
+            return self::filterByDateWindow($mCachedList);
+        }
+
+        $arTierList = $this->getIDListFromDB();
+        $this->saveIDList($arTierList);
+
+        return self::filterByDateWindow($arTierList);
+    }
+
+    /**
+     * Keep the tiers whose campaign is running at this instant.
+     *
+     * Reproduces Campaign::scopeCurrentActive() exactly: a null date_end runs
+     * forever, which is how 17 of the 39 campaigns are set up, and a null
+     * date_begin never starts, because `date_begin <= now` is false for NULL in
+     * SQL and the model requires the field anyway.
+     * @param array<int, array<string, mixed>> $arTierList
+     * @return array<int, array<string, mixed>>
+     */
+    protected static function filterByDateWindow(array $arTierList): array
+    {
+        $sDateNow = Carbon::now()->toDateTimeString();
+
+        return array_values(array_filter(
+            $arTierList,
+            static function (array $arTier) use ($sDateNow): bool {
+                $mDateBegin = $arTier['date_begin'] ?? null;
+                if (!is_string($mDateBegin) || $mDateBegin > $sDateNow) {
+                    return false;
+                }
+
+                $mDateEnd = $arTier['date_end'] ?? null;
+
+                return !is_string($mDateEnd) || $mDateEnd > $sDateNow;
+            }
+        ));
     }
 
     /**
@@ -150,20 +250,26 @@ class OfferCampaignPricingStore extends AbstractStoreWithParam
     }
 
     /**
-     * Extract pricing tier data from active campaigns with quantity-based mechanisms
+     * Extract pricing tier data from active campaigns with quantity-based mechanisms.
+     *
+     * No currentActive() here on purpose: each row carries its campaign's date
+     * window instead, and getIDList() applies it on the way out, so what goes
+     * into a forever cache says nothing about when it was built. The active flag
+     * stays, because that one is a saved field and clears the cache when it
+     * changes.
      * @param list<int> $arCampaignIdList
      * @return array<int, array<string, mixed>>
      */
     protected function extractPricingTierList(array $arCampaignIdList): array
     {
         $obCampaignList = Campaign::active()
-            ->currentActive()
             ->whereIn('id', $arCampaignIdList)
             ->with('mechanism')
             ->get();
 
         $arResult = [];
 
+        /** @var Campaign $obCampaign */
         foreach ($obCampaignList as $obCampaign) {
             /** @var PromoMechanism|null $obMechanism */
             $obMechanism = $obCampaign->mechanism;
@@ -199,6 +305,8 @@ class OfferCampaignPricingStore extends AbstractStoreWithParam
             $arResult[] = [
                 'campaign_id'       => $obCampaign->id,
                 'campaign_name'     => $obCampaign->name,
+                'date_begin'        => self::dbDateString($obCampaign->date_begin),
+                'date_end'          => self::dbDateString($obCampaign->date_end),
                 'mechanism_id'      => $obMechanism->id,
                 'quantity'          => $iQuantity,
                 'discount_value'    => $fDiscountValue,

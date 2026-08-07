@@ -42,32 +42,3 @@ parameters:
 			count: 1
 			path: classes/item/CampaignPricingItem.php
 
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: classes/store/OfferCampaignPricingStore.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$mechanism\.$#'
-			identifier: property.notFound
-			count: 1
-			path: classes/store/OfferCampaignPricingStore.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: classes/store/OfferCampaignPricingStore.php
-
-		-
-			message: '#^Parameter \#1 \$array of function usort contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: classes/store/OfferCampaignPricingStore.php
-
-		-
-			message: '#^Parameter \#2 \$callback of function usort contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: classes/store/OfferCampaignPricingStore.php

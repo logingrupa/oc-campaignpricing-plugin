@@ -15,3 +15,5 @@
     - 'Add default.htm component partial and onSwitchOffer AJAX handler'
 1.4.1:
     - 'Memoize PromoMechanism lookups across pricing tiers (one find per mechanism per request)'
+1.4.2:
+    - 'Cache offers that have no pricing tiers, decide the campaign date window when the tiers are read rather than when they are cached, version the cache key so entries written by 1.4.1 are ignored instead of misread, and narrow the mechanism cache on the way in so the plugin is clean under phpstan level 10'
