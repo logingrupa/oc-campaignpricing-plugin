@@ -65,6 +65,28 @@ test('all variables replaced in custom template (EUR)', function () {
     expect($sText)->toContain('Summer Sale');
 });
 
+test('custom template html is rendered verbatim', function () {
+    $obTier = CampaignPricingItem::makeFromData([
+        'quantity'         => 10,
+        'discount_value'   => 10.0,
+        'discount_type'    => 'fixed',
+        'mechanism_type'   => 'TestMechanism',
+        'mechanism_name'   => 'TestMechanism',
+        'price_type'       => 'target_price',
+        'display_type'     => 'target_price',
+        'display_template' => '<strong>:price/pc.</strong> – when buying <span>:quantity+</span> pcs<br>',
+        'offer_base_price' => 50.0,
+        'offer_currency'   => 'EUR',
+        'campaign_name'    => 'Test',
+    ]);
+
+    $sText = $obTier->display_text;
+
+    expect($sText)->toContain('<strong>');
+    expect($sText)->toContain('<span>10+</span>');
+    expect($sText)->toContain('<br>');
+});
+
 test('empty template falls back to lang key', function () {
     $obTier = CampaignPricingItem::makeFromData([
         'quantity'         => 10,

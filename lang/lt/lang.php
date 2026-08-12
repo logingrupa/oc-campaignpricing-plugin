@@ -35,10 +35,10 @@
         'preview_fallback' => 'neišversta — rodoma numatytoji',
     ],
     'display' => [
-        'target_price'   => 'Pirkite :quantity+ už :price',
-        'offer_quantity'  => 'Pirkite :quantity+ vnt.: :discount nuolaida',
-        'total_quantity'  => 'Iš viso :quantity+ vnt.: :discount nuolaida',
-        'position_count'  => ':count+ prekių krepšelyje: :discount nuolaida',
-        'unconditional'   => ':discount nuolaida',
+        'target_price'   => '<strong>:price/vnt.</strong> – perkant :quantity vnt.',
+        'offer_quantity'  => '<strong>:discount nuolaida</strong> – perkant :quantity+ vnt.',
+        'total_quantity'  => '<strong>:discount nuolaida</strong> – iš viso :quantity+ vnt.',
+        'position_count'  => '<strong>:discount nuolaida</strong> – :count+ prekių krepšelyje',
+        'unconditional'   => '<strong>:discount nuolaida</strong>',
     ],
 ];

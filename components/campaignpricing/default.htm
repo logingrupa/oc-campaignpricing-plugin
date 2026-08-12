@@ -16,14 +16,10 @@
     {% set obCampaignPricingList = obOffer.campaign_pricing_list %}
 
     {% if obCampaignPricingList is not empty and obCampaignPricingList.count() > 0 %}
-    <div class="campaign-pricing-tiers">
-        <ul class="campaign-pricing-tiers__list">
-            {% for obTier in obCampaignPricingList %}
-            <li class="campaign-pricing-tiers__item">
-                {{ obTier.display_text|raw }}
-            </li>
-            {% endfor %}
-        </ul>
+    <div class="campaign-pricing-tiers shop-product__short-desc">
+        {%- for obTier in obCampaignPricingList -%}
+            <span class="campaign-pricing-tiers__item">{{ obTier.display_text|raw }}</span><br>
+        {%- endfor -%}
     </div>
     {% endif %}
 {% endif %}

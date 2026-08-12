@@ -245,7 +245,7 @@ class CampaignPricingItem extends ElementItem
     {
         return [
             'quantity'       => $this->quantity,
-            'price'          => $this->stringData('offer_currency') . $this->price,
+            'price'          => trim($this->price . ' ' . $this->stringData('offer_currency')),
             'currency'       => $this->stringData('offer_currency'),
             'discount'       => $this->discount_display,
             'discount_value' => $this->discount_value,

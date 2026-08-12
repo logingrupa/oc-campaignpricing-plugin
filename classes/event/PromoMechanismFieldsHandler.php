@@ -9,8 +9,10 @@ use Lovata\Toolbox\Classes\Event\AbstractBackendFieldHandler;
  * @package Logingrupa\CampaignpricingShopaholic\Classes\Event
  *
  * Extends the promo mechanism backend form with a display_template field.
- * Uses richeditor for bold/italic support and is translatable via the
- * October CMS v4 site switcher (TranslatableModel behavior).
+ * Uses a plain textarea so the admin's HTML (<strong>, <br>, <span>, ...) is
+ * stored verbatim - a richeditor would wrap the value in <p> blocks and split
+ * inline tags. Translatable via the October CMS v4 site switcher
+ * (TranslatableModel behavior).
  */
 class PromoMechanismFieldsHandler extends AbstractBackendFieldHandler
 {
@@ -54,24 +56,13 @@ class PromoMechanismFieldsHandler extends AbstractBackendFieldHandler
                 ],
             ],
             'display_template' => [
-                'label'          => 'logingrupa.campaignpricingshopaholic::lang.field.display_template',
-                'type'           => 'richeditor',
-                'translatable'   => true,
-                'toolbarButtons' => 'paragraphFormat|fontSize|bold|italic|underline|color|---|undo|redo|html',
-                'paragraphFormat' => [
-                    'N'  => 'Normal',
-                    'H1' => 'Heading 1',
-                    'H2' => 'Heading 2',
-                    'H3' => 'Heading 3',
-                    'H4' => 'Heading 4',
-                    'H5' => 'Heading 5',
-                    'H6' => 'Heading 6',
-                ],
-                'fontSize' => ['8', '9', '10', '11', '12', '13', '14', '15', '16', '18', '20', '22', '24', '28', '32', '36', '48'],
-                'size'           => 'small',
-                'span'           => 'left',
-                'tab'            => 'logingrupa.campaignpricingshopaholic::lang.field.tab_display',
-                'placeholder'    => 'logingrupa.campaignpricingshopaholic::lang.field.display_template_placeholder',
+                'label'        => 'logingrupa.campaignpricingshopaholic::lang.field.display_template',
+                'type'         => 'textarea',
+                'translatable' => true,
+                'size'         => 'small',
+                'span'         => 'left',
+                'tab'          => 'logingrupa.campaignpricingshopaholic::lang.field.tab_display',
+                'placeholder'  => 'logingrupa.campaignpricingshopaholic::lang.field.display_template_placeholder',
                 'trigger' => [
                     'action'    => 'show',
                     'field'     => 'property[campaign_pricing_custom_template]',

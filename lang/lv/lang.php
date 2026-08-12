@@ -35,10 +35,10 @@
         'preview_fallback' => 'nav tulkots — rāda noklusēto',
     ],
     'display' => [
-        'target_price'   => 'Pērc :quantity+ par :price',
-        'offer_quantity'  => 'Pērc :quantity+ gab.: :discount atlaide',
-        'total_quantity'  => 'Kopā :quantity+ gab.: :discount atlaide',
-        'position_count'  => ':count+ produkti grozā: :discount atlaide',
-        'unconditional'   => ':discount atlaide',
+        'target_price'   => '<strong>:price/gab.</strong> – pērkot :quantity gab.',
+        'offer_quantity'  => '<strong>:discount atlaide</strong> – pērkot :quantity+ gab.',
+        'total_quantity'  => '<strong>:discount atlaide</strong> – kopā :quantity+ gab.',
+        'position_count'  => '<strong>:discount atlaide</strong> – :count+ produkti grozā',
+        'unconditional'   => '<strong>:discount atlaide</strong>',
     ],
 ];

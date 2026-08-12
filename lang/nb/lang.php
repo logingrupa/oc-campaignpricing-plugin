@@ -35,10 +35,10 @@
         'preview_fallback' => 'ikke oversatt — viser standard',
     ],
     'display' => [
-        'target_price'   => 'Kjøp :quantity+ for :price',
-        'offer_quantity'  => 'Kjøp :quantity+ stk: :discount rabatt',
-        'total_quantity'  => 'Totalt :quantity+ stk: :discount rabatt',
-        'position_count'  => ':count+ produkter i handlekurven: :discount rabatt',
-        'unconditional'   => ':discount rabatt',
+        'target_price'   => '<strong>:price/stk.</strong> – ved kjøp av :quantity stk.',
+        'offer_quantity'  => '<strong>:discount rabatt</strong> – ved kjøp av :quantity+ stk.',
+        'total_quantity'  => '<strong>:discount rabatt</strong> – totalt :quantity+ stk.',
+        'position_count'  => '<strong>:discount rabatt</strong> – :count+ produkter i handlekurven',
+        'unconditional'   => '<strong>:discount rabatt</strong>',
     ],
 ];

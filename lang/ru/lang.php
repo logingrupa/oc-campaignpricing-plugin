@@ -35,10 +35,10 @@
         'preview_fallback' => 'не переведено — показан текст по умолчанию',
     ],
     'display' => [
-        'target_price'   => 'Купите :quantity+ за :price',
-        'offer_quantity'  => 'Купите :quantity+ шт.: скидка :discount',
-        'total_quantity'  => 'Всего :quantity+ шт.: скидка :discount',
-        'position_count'  => ':count+ товаров в корзине: скидка :discount',
-        'unconditional'   => 'Скидка :discount',
+        'target_price'   => '<strong>:price/шт.</strong> – при покупке :quantity шт.',
+        'offer_quantity'  => '<strong>Скидка :discount</strong> – при покупке :quantity+ шт.',
+        'total_quantity'  => '<strong>Скидка :discount</strong> – всего :quantity+ шт.',
+        'position_count'  => '<strong>Скидка :discount</strong> – :count+ товаров в корзине',
+        'unconditional'   => '<strong>Скидка :discount</strong>',
     ],
 ];

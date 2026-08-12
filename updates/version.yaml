@@ -17,3 +17,6 @@
     - 'Memoize PromoMechanism lookups across pricing tiers (one find per mechanism per request)'
 1.4.2:
     - 'Cache offers that have no pricing tiers, decide the campaign date window when the tiers are read rather than when they are cached, version the cache key so entries written by 1.4.1 are ignored instead of misread, and narrow the mechanism cache on the way in so the plugin is clean under phpstan level 10'
+1.5.0:
+    - 'New default tier text (bold price per unit, e.g. "9,60 EUR/gab. - perkot 10 gab.") in all languages, price placeholder now renders value before currency, display_template field is a plain textarea so admin HTML is stored verbatim, and stored richeditor <p> wrappers are cleaned up once by migration'
+    - clean_display_template_richeditor_markup.php

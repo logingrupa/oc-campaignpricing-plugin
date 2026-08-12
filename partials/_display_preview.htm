@@ -39,7 +39,7 @@ if ($obModel && $obModel->type) {
             if (!Lang::has($sLangKey)) {
                 $sLangKey = 'logingrupa.campaignpricingshopaholic::lang.display.offer_quantity';
             }
-            $sPreviewText = Lang::get($sLangKey);
+            $sPreviewText = strip_tags(Lang::get($sLangKey));
         }
 
         // Replace :placeholders (longest-first to avoid partial replacement)

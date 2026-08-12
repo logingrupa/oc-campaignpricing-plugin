@@ -110,16 +110,8 @@ if ($obModel && $obModel->type) {
         var elPreview = document.getElementById('cpLivePreviewText');
         if (!elPreview) { stopPolling(); return; }
 
-        // Read from the Froala contenteditable div
-        var elEditor = document.querySelector('#Form-field-PromoMechanism-display_template-group .fr-element');
-        var sContent = '';
-        if (elEditor) {
-            sContent = elEditor.innerHTML || '';
-        } else {
-            // Fallback: read hidden textarea
-            var elTextarea = document.querySelector('[name="PromoMechanism[display_template]"]');
-            if (elTextarea) sContent = elTextarea.value || '';
-        }
+        var elTextarea = document.querySelector('[name="PromoMechanism[display_template]"]');
+        var sContent = elTextarea ? (elTextarea.value || '') : '';
 
         // Skip if content hasn't changed
         if (sContent === sLastContent) return;

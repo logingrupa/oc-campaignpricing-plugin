@@ -35,10 +35,10 @@
         'preview_fallback' => 'not translated — showing default',
     ],
     'display' => [
-        'target_price'   => 'Buy :quantity+ for :price',
-        'offer_quantity'  => 'Buy :quantity+ pcs: :discount discount',
-        'total_quantity'  => 'Total :quantity+ pcs: :discount discount',
-        'position_count'  => ':count+ products in cart: :discount discount',
-        'unconditional'   => ':discount discount',
+        'target_price'   => '<strong>:price/pc.</strong> – when buying :quantity pcs',
+        'offer_quantity'  => '<strong>:discount discount</strong> – when buying :quantity+ pcs',
+        'total_quantity'  => '<strong>:discount discount</strong> – :quantity+ pcs in total',
+        'position_count'  => '<strong>:discount discount</strong> – :count+ products in cart',
+        'unconditional'   => '<strong>:discount discount</strong>',
     ],
 ];
