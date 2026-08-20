@@ -35,6 +35,8 @@ class PromoMechanismPricingHandler extends ModelHandler
             ->pluck('id')
             ->all();
 
+        OfferCampaignPricingStore::forgetMemo();
+
         /** @var OfferCampaignPricingStore $obStore */
         $obStore = OfferCampaignPricingStore::instance();
 

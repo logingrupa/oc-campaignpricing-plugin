@@ -29,12 +29,15 @@ class CampaignPricingItem extends ElementItem
     public const MODEL_CLASS = \Model::class;
 
     /**
-     * Request-scoped mechanism cache. Multiple tiers of one campaign share a
-     * mechanism; without this every tier ran its own PromoMechanism::find()
-     * (plus a translate attribute load) at render time.
-     * @var array<int, PromoMechanism|null>
+     * Request-scoped mechanism cache, filled by one bulk query on first use.
+     * Without it every tier ran its own PromoMechanism::find() at render time,
+     * which cost one query per distinct mechanism on catalog pages.
+     * @var array<int, PromoMechanism>
      */
     private static array $arMechanismCache = [];
+
+    /** @var bool Guards the bulk load so an empty table is not re-queried per tier. */
+    private static bool $bMechanismCacheLoaded = false;
 
     /**
      * Factory method to create an item from a tier data array (not a model)
@@ -272,14 +275,18 @@ class CampaignPricingItem extends ElementItem
             return '';
         }
 
-        if (!array_key_exists($iMechanismId, self::$arMechanismCache)) {
-            // narrowed on the way in, not on the way out: find() is typed as the
-            // base Model, and the cache promises a PromoMechanism or nothing
-            $obFound = PromoMechanism::find($iMechanismId);
-            self::$arMechanismCache[$iMechanismId] = $obFound instanceof PromoMechanism ? $obFound : null;
+        if (!self::$bMechanismCacheLoaded) {
+            // narrowed on the way in, not on the way out: the cache promises
+            // PromoMechanism instances only
+            foreach (PromoMechanism::all() as $obFound) {
+                if ($obFound instanceof PromoMechanism) {
+                    self::$arMechanismCache[(int) $obFound->id] = $obFound;
+                }
+            }
+            self::$bMechanismCacheLoaded = true;
         }
 
-        $obMechanism = self::$arMechanismCache[$iMechanismId];
+        $obMechanism = self::$arMechanismCache[$iMechanismId] ?? null;
         if ($obMechanism === null) {
             return '';
         }

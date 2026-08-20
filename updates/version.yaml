@@ -20,3 +20,5 @@
 1.5.0:
     - 'New default tier text (bold price per unit, e.g. "9,60 EUR/gab. - perkot 10 gab.") in all languages, price placeholder now renders value before currency, display_template field is a plain textarea so admin HTML is stored verbatim, and stored richeditor <p> wrappers are cleaned up once by migration'
     - clean_display_template_richeditor_markup.php
+1.5.1:
+  - 'Tier render queries drop to one bulk load: the CampaignPricingItem mechanism cache fills from a single PromoMechanism::all() on first use instead of one find() per distinct mechanism, and OfferCampaignPricingStore gains per-request memos (offer to product, product campaign lists, tier lists) with a forgetMemo() hook wired into the cache invalidation handlers.'

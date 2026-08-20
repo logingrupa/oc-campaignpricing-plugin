@@ -47,6 +47,8 @@ class CampaignPricingRelationHandler extends AbstractModelRelationHandler
     {
         $arOfferIdList = OfferCampaignPricingStore::resolveAffectedOfferIdList($obModel);
 
+        OfferCampaignPricingStore::forgetMemo();
+
         /** @var OfferCampaignPricingStore $obStore */
         $obStore = OfferCampaignPricingStore::instance();
         foreach ($arOfferIdList as $iOfferId) {

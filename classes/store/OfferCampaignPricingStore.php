@@ -25,6 +25,35 @@ class OfferCampaignPricingStore extends AbstractStoreWithParam
     private const CACHE_KEY_VERSION = 'v2';
 
     /**
+     * Per-request memos. A product page resolves every offer of ONE product,
+     * so the product-level half of the fan-out (brand, categories, and the
+     * product/brand/category campaign pivots) is the same answer for each of
+     * them, and so is the campaign extraction whenever two offers resolve the
+     * same campaign set. Only the offer's own product_id and its direct
+     * campaign_offer pivot stay per offer.
+     *
+     * @var array<int, int> product id by offer id
+     */
+    private static array $arProductIdByOfferId = [];
+
+    /** @var array<int, list<int>> campaign ids from the product-level pivots, by product id */
+    private static array $arProductCampaignIdListByProductId = [];
+
+    /** @var array<string, array<int, array<string, mixed>>> extracted tiers by campaign id list */
+    private static array $arTierListByCampaignKey = [];
+
+    /**
+     * Drop the per-request memos. Called by the cache invalidation handlers,
+     * because a queue worker holds one process across many jobs.
+     */
+    public static function forgetMemo(): void
+    {
+        self::$arProductIdByOfferId = [];
+        self::$arProductCampaignIdListByProductId = [];
+        self::$arTierListByCampaignKey = [];
+    }
+
+    /**
      * Type-safe integer from DB::value() which returns mixed.
      */
     private static function dbInt(mixed $mValue): int
@@ -152,36 +181,52 @@ class OfferCampaignPricingStore extends AbstractStoreWithParam
         $iOfferId = self::dbInt($this->sValue);
 
         // Step 1: Get offer's product_id
-        $iProductId = self::dbInt(DB::table('lovata_shopaholic_offers')
-            ->where('id', $iOfferId)
-            ->value('product_id'));
+        if (!array_key_exists($iOfferId, self::$arProductIdByOfferId)) {
+            self::$arProductIdByOfferId[$iOfferId] = self::dbInt(DB::table('lovata_shopaholic_offers')
+                ->where('id', $iOfferId)
+                ->value('product_id'));
+        }
+        $iProductId = self::$arProductIdByOfferId[$iOfferId];
 
         if ($iProductId === 0) {
             return [];
         }
 
-        // Step 2: Get product's brand_id
-        $iBrandId = self::dbInt(DB::table('lovata_shopaholic_products')
-            ->where('id', $iProductId)
-            ->value('brand_id'));
-
-        // Step 3: Get product's category IDs (primary + additional)
-        $arCategoryIdList = $this->getProductCategoryIdList($iProductId);
-
-        // Step 4: Query 4 pivot tables for campaign IDs
-        $arCampaignIdList = $this->resolveCampaignIdList(
-            $iOfferId,
-            $iProductId,
-            $iBrandId,
-            $arCategoryIdList
-        );
+        // Step 2: Campaign IDs from the offer's own pivot plus the product-level ones
+        $arCampaignIdList = array_values(array_unique(array_merge(
+            self::dbIntList('lovata_campaigns_shopaholic_campaign_offer', 'campaign_id', 'offer_id', $iOfferId),
+            $this->getProductCampaignIdList($iProductId)
+        )));
 
         if ($arCampaignIdList === []) {
             return [];
         }
 
-        // Step 5: Filter to active, quantity-based campaigns and extract tier data
+        // Step 3: Filter to active, quantity-based campaigns and extract tier data
         return $this->extractPricingTierList($arCampaignIdList);
+    }
+
+    /**
+     * Campaign ids linked to a product through the product, brand and category
+     * pivots - everything the offers of one product share.
+     * @return list<int>
+     */
+    protected function getProductCampaignIdList(int $iProductId): array
+    {
+        if (array_key_exists($iProductId, self::$arProductCampaignIdListByProductId)) {
+            return self::$arProductCampaignIdListByProductId[$iProductId];
+        }
+
+        $iBrandId = self::dbInt(DB::table('lovata_shopaholic_products')
+            ->where('id', $iProductId)
+            ->value('brand_id'));
+
+        $arCategoryIdList = $this->getProductCategoryIdList($iProductId);
+
+        $arCampaignIdList = $this->resolveCampaignIdList(0, $iProductId, $iBrandId, $arCategoryIdList);
+        self::$arProductCampaignIdListByProductId[$iProductId] = $arCampaignIdList;
+
+        return $arCampaignIdList;
     }
 
     /**
@@ -220,8 +265,10 @@ class OfferCampaignPricingStore extends AbstractStoreWithParam
         int $iBrandId,
         array $arCategoryIdList
     ): array {
-        // Direct offer link
-        $arDirectOfferCampaignIdList = self::dbIntList('lovata_campaigns_shopaholic_campaign_offer', 'campaign_id', 'offer_id', $iOfferId);
+        // Direct offer link, skipped when only the product-level pivots are wanted
+        $arDirectOfferCampaignIdList = $iOfferId === 0
+            ? []
+            : self::dbIntList('lovata_campaigns_shopaholic_campaign_offer', 'campaign_id', 'offer_id', $iOfferId);
 
         // Product link
         $arProductCampaignIdList = self::dbIntList('lovata_campaigns_shopaholic_campaign_product', 'campaign_id', 'product_id', $iProductId);
@@ -262,6 +309,13 @@ class OfferCampaignPricingStore extends AbstractStoreWithParam
      */
     protected function extractPricingTierList(array $arCampaignIdList): array
     {
+        $arSortedCampaignIdList = $arCampaignIdList;
+        sort($arSortedCampaignIdList);
+        $sCampaignKey = implode(',', $arSortedCampaignIdList);
+        if (array_key_exists($sCampaignKey, self::$arTierListByCampaignKey)) {
+            return self::$arTierListByCampaignKey[$sCampaignKey];
+        }
+
         $obCampaignList = Campaign::active()
             ->whereIn('id', $arCampaignIdList)
             ->with('mechanism')
@@ -320,6 +374,8 @@ class OfferCampaignPricingStore extends AbstractStoreWithParam
 
         // Sort by quantity ascending
         usort($arResult, fn (array $arTierA, array $arTierB): int => $arTierA['quantity'] <=> $arTierB['quantity']);
+
+        self::$arTierListByCampaignKey[$sCampaignKey] = $arResult;
 
         return $arResult;
     }

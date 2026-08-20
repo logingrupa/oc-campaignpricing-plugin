@@ -48,6 +48,8 @@ class CampaignPricingModelHandler extends ModelHandler
     {
         $arOfferIdList = OfferCampaignPricingStore::resolveAffectedOfferIdList($this->obElement);
 
+        OfferCampaignPricingStore::forgetMemo();
+
         /** @var OfferCampaignPricingStore $obStore */
         $obStore = OfferCampaignPricingStore::instance();
         foreach ($arOfferIdList as $iOfferId) {
