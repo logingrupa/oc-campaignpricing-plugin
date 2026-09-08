@@ -22,3 +22,5 @@
     - clean_display_template_richeditor_markup.php
 1.5.1:
   - 'Tier render queries drop to one bulk load: the CampaignPricingItem mechanism cache fills from a single PromoMechanism::all() on first use instead of one find() per distinct mechanism, and OfferCampaignPricingStore gains per-request memos (offer to product, product campaign lists, tier lists) with a forgetMemo() hook wired into the cache invalidation handlers.'
+1.5.2:
+    - 'Drop the non-compound "use Lang;" import from the promo mechanism preview partial. The file has no namespace, so PHP emitted a compile warning that October raised as an exception and the mechanism edit form died on any server whose OPcache was too full to keep the compiled partial.'
